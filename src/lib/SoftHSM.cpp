@@ -2720,6 +2720,7 @@ static CK_RV SymEncryptFinal(Session* session, CK_BYTE_PTR pEncryptedData, CK_UL
 CK_RV SoftHSM::C_EncryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
+	if (pulEncryptedDataLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
 
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
