@@ -3423,6 +3423,7 @@ static CK_RV SymDecryptFinal(Session* session, CK_BYTE_PTR pDecryptedData, CK_UL
 CK_RV SoftHSM::C_DecryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG_PTR pDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
+	if (pDataLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
 
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
