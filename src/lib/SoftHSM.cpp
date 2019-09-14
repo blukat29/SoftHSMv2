@@ -2563,9 +2563,6 @@ CK_RV SoftHSM::C_Encrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	if (pData == NULL_PTR) return CKR_ARGUMENTS_BAD;
-	if (pulEncryptedDataLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
-
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
 	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
@@ -2573,6 +2570,11 @@ CK_RV SoftHSM::C_Encrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_ENCRYPT)
 		return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pData == NULL_PTR || pulEncryptedDataLen == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	if (session->getSymmetricCryptoOp() != NULL)
 		return SymEncrypt(session, pData, ulDataLen,
@@ -2659,9 +2661,6 @@ CK_RV SoftHSM::C_EncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	if (pData == NULL_PTR) return CKR_ARGUMENTS_BAD;
-	if (pulEncryptedDataLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
-
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
 	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
@@ -2669,6 +2668,11 @@ CK_RV SoftHSM::C_EncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_ENCRYPT)
 		return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pData == NULL_PTR || pulEncryptedDataLen == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	if (session->getSymmetricCryptoOp() != NULL)
 		return SymEncryptUpdate(session, pData, ulDataLen,
@@ -2754,7 +2758,6 @@ static CK_RV SymEncryptFinal(Session* session, CK_BYTE_PTR pEncryptedData, CK_UL
 CK_RV SoftHSM::C_EncryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
-	if (pulEncryptedDataLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
 
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
@@ -2762,6 +2765,11 @@ CK_RV SoftHSM::C_EncryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncrypted
 
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_ENCRYPT) return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pulEncryptedDataLen == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	if (session->getSymmetricCryptoOp() != NULL)
 		return SymEncryptFinal(session, pEncryptedData, pulEncryptedDataLen);
@@ -3297,9 +3305,6 @@ CK_RV SoftHSM::C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData,
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	if (pEncryptedData == NULL_PTR) return CKR_ARGUMENTS_BAD;
-	if (pulDataLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
-
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
 	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
@@ -3307,6 +3312,11 @@ CK_RV SoftHSM::C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData,
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_DECRYPT)
 		return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pEncryptedData == NULL_PTR || pulDataLen == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	if (session->getSymmetricCryptoOp() != NULL)
 		return SymDecrypt(session, pEncryptedData, ulEncryptedDataLen,
@@ -3397,9 +3407,6 @@ CK_RV SoftHSM::C_DecryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncrypte
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	if (pEncryptedData == NULL_PTR) return CKR_ARGUMENTS_BAD;
-	if (pDataLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
-
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
 	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
@@ -3407,6 +3414,11 @@ CK_RV SoftHSM::C_DecryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncrypte
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_DECRYPT)
 		return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pEncryptedData == NULL_PTR || pDataLen == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	if (session->getSymmetricCryptoOp() != NULL)
 		return SymDecryptUpdate(session, pEncryptedData, ulEncryptedDataLen,
@@ -3491,7 +3503,6 @@ static CK_RV SymDecryptFinal(Session* session, CK_BYTE_PTR pDecryptedData, CK_UL
 CK_RV SoftHSM::C_DecryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG_PTR pDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
-	if (pDataLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
 
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
@@ -3499,6 +3510,11 @@ CK_RV SoftHSM::C_DecryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_
 
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_DECRYPT) return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pDataLen == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	if (session->getSymmetricCryptoOp() != NULL)
 		return SymDecryptFinal(session, pData, pDataLen);
