@@ -3589,15 +3589,17 @@ CK_RV SoftHSM::C_Digest(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG 
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	if (pulDigestLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
-	if (pData == NULL_PTR) return CKR_ARGUMENTS_BAD;
-
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
 	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
 
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_DIGEST) return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pulDigestLen == NULL_PTR || pData == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	// Return size
 	CK_ULONG size = session->getDigestOp()->getHashSize();
@@ -3652,14 +3654,17 @@ CK_RV SoftHSM::C_DigestUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pPart, CK_
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	if (pPart == NULL_PTR) return CKR_ARGUMENTS_BAD;
-
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
 	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
 
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_DIGEST) return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pPart == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	// Get the data
 	ByteString data(pPart, ulPartLen);
@@ -3753,14 +3758,17 @@ CK_RV SoftHSM::C_DigestFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pDigest, CK
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
-	if (pulDigestLen == NULL_PTR) return CKR_ARGUMENTS_BAD;
-
 	// Get the session
 	Session* session = (Session*)handleManager->getSession(hSession);
 	if (session == NULL) return CKR_SESSION_HANDLE_INVALID;
 
 	// Check if we are doing the correct operation
 	if (session->getOpType() != SESSION_OP_DIGEST) return CKR_OPERATION_NOT_INITIALIZED;
+
+	if (pulDigestLen == NULL_PTR) {
+		session->resetOp();
+		return CKR_ARGUMENTS_BAD;
+	}
 
 	// Return size
 	CK_ULONG size = session->getDigestOp()->getHashSize();

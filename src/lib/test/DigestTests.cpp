@@ -109,8 +109,14 @@ void DigestTests::testDigest()
 	rv = CRYPTOKI_F_PTR( C_Digest(hSession, NULL_PTR, sizeof(data)-1, NULL_PTR, &digestLen) );
 	CPPUNIT_ASSERT(rv == CKR_ARGUMENTS_BAD);
 
+	rv = CRYPTOKI_F_PTR( C_DigestInit(hSession, &mechanism) );
+	CPPUNIT_ASSERT(rv == CKR_OK);
+
 	rv = CRYPTOKI_F_PTR( C_Digest(hSession, data, sizeof(data)-1, NULL_PTR, NULL_PTR) );
 	CPPUNIT_ASSERT(rv == CKR_ARGUMENTS_BAD);
+
+	rv = CRYPTOKI_F_PTR( C_DigestInit(hSession, &mechanism) );
+	CPPUNIT_ASSERT(rv == CKR_OK);
 
 	rv = CRYPTOKI_F_PTR( C_Digest(hSession, data, sizeof(data)-1, NULL_PTR, &digestLen) );
 	CPPUNIT_ASSERT(rv == CKR_OK);
@@ -152,7 +158,7 @@ void DigestTests::testDigestUpdate()
 
 	rv = CRYPTOKI_F_PTR( C_DigestUpdate(CK_INVALID_HANDLE, data, sizeof(data)-1) );
 	CPPUNIT_ASSERT(rv == CKR_SESSION_HANDLE_INVALID);
-	
+
 	rv = CRYPTOKI_F_PTR( C_DigestUpdate(hSession, data, sizeof(data)-1) );
 	CPPUNIT_ASSERT(rv == CKR_OPERATION_NOT_INITIALIZED);
 
@@ -161,6 +167,9 @@ void DigestTests::testDigestUpdate()
 
 	rv = CRYPTOKI_F_PTR( C_DigestUpdate(hSession, NULL_PTR, sizeof(data)-1) );
 	CPPUNIT_ASSERT(rv == CKR_ARGUMENTS_BAD);
+
+	rv = CRYPTOKI_F_PTR( C_DigestInit(hSession, &mechanism) );
+	CPPUNIT_ASSERT(rv == CKR_OK);
 
 	rv = CRYPTOKI_F_PTR( C_DigestUpdate(hSession, data, sizeof(data)-1) );
 	CPPUNIT_ASSERT(rv == CKR_OK);
@@ -249,7 +258,7 @@ void DigestTests::testDigestFinal()
 
 	rv = CRYPTOKI_F_PTR( C_DigestFinal(CK_INVALID_HANDLE, NULL_PTR, &digestLen) );
 	CPPUNIT_ASSERT(rv == CKR_SESSION_HANDLE_INVALID);
-	
+
 	rv = CRYPTOKI_F_PTR( C_DigestFinal(hSession, NULL_PTR, &digestLen) );
 	CPPUNIT_ASSERT(rv == CKR_OPERATION_NOT_INITIALIZED);
 
@@ -261,6 +270,12 @@ void DigestTests::testDigestFinal()
 
 	rv = CRYPTOKI_F_PTR( C_DigestFinal(hSession, NULL_PTR, NULL_PTR) );
 	CPPUNIT_ASSERT(rv == CKR_ARGUMENTS_BAD);
+
+	rv = CRYPTOKI_F_PTR( C_DigestInit(hSession, &mechanism) );
+	CPPUNIT_ASSERT(rv == CKR_OK);
+
+	rv = CRYPTOKI_F_PTR( C_DigestUpdate(hSession, data, sizeof(data)-1) );
+	CPPUNIT_ASSERT(rv == CKR_OK);
 
 	rv = CRYPTOKI_F_PTR( C_DigestFinal(hSession, NULL_PTR, &digestLen) );
 	CPPUNIT_ASSERT(rv == CKR_OK);
