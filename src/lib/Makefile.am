@@ -15,6 +15,7 @@ lib_LTLIBRARIES =		libsofthsm2.la
 libsofthsm2_la_SOURCES =	access.cpp \
 				main.cpp \
 				P11Attributes.cpp \
+				P11Interface.cpp \
 				P11Objects.cpp \
 				SoftHSM.cpp
 libsofthsm2_la_LIBADD =		common/libsofthsm_common.la \
