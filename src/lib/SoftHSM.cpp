@@ -350,7 +350,7 @@ void SoftHSM::reset()
 }
 
 // Constructor
-SoftHSM::SoftHSM()
+SoftHSMCore::SoftHSMCore()
 {
 	isInitialised = false;
 	isRemovable = false;
@@ -363,7 +363,7 @@ SoftHSM::SoftHSM()
 }
 
 // Destructor
-SoftHSM::~SoftHSM()
+SoftHSMCore::~SoftHSMCore()
 {
 	if (handleManager != NULL) delete handleManager;
 	handleManager = NULL;
@@ -389,7 +389,7 @@ CK_ULONG nrSupportedMechanisms;
  *****************************************************************************/
 
 // PKCS #11 initialisation function
-CK_RV SoftHSM::C_Initialize(CK_VOID_PTR pInitArgs)
+CK_RV SoftHSMCore::C_Initialize(CK_VOID_PTR pInitArgs)
 {
 	CK_C_INITIALIZE_ARGS_PTR args;
 
@@ -552,7 +552,7 @@ CK_RV SoftHSM::C_Initialize(CK_VOID_PTR pInitArgs)
 }
 
 // PKCS #11 finalisation function
-CK_RV SoftHSM::C_Finalize(CK_VOID_PTR pReserved)
+CK_RV SoftHSMCore::C_Finalize(CK_VOID_PTR pReserved)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -574,12 +574,11 @@ CK_RV SoftHSM::C_Finalize(CK_VOID_PTR pReserved)
 
 	isInitialised = false;
 
-	SoftHSM::reset();
 	return CKR_OK;
 }
 
 // Return information about the PKCS #11 module
-CK_RV SoftHSM::C_GetInfo(CK_INFO_PTR pInfo)
+CK_RV SoftHSMCore::C_GetInfo(CK_INFO_PTR pInfo)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 	if (pInfo == NULL_PTR) return CKR_ARGUMENTS_BAD;
@@ -602,7 +601,7 @@ CK_RV SoftHSM::C_GetInfo(CK_INFO_PTR pInfo)
 }
 
 // Return a list of available slots
-CK_RV SoftHSM::C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount)
+CK_RV SoftHSMCore::C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK_ULONG_PTR pulCount)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -610,7 +609,7 @@ CK_RV SoftHSM::C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList, CK
 }
 
 // Return information about a slot
-CK_RV SoftHSM::C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
+CK_RV SoftHSMCore::C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
 {
 	CK_RV rv;
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
@@ -634,7 +633,7 @@ CK_RV SoftHSM::C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
 }
 
 // Return information about a token in a slot
-CK_RV SoftHSM::C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
+CK_RV SoftHSMCore::C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -653,7 +652,7 @@ CK_RV SoftHSM::C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 	return token->getTokenInfo(pInfo);
 }
 
-void SoftHSM::prepareSupportedMecahnisms(std::map<std::string, CK_MECHANISM_TYPE> &t)
+void SoftHSMCore::prepareSupportedMecahnisms(std::map<std::string, CK_MECHANISM_TYPE> &t)
 {
 #ifndef WITH_FIPS
 	t["CKM_MD5"]			= CKM_MD5;
@@ -799,7 +798,7 @@ void SoftHSM::prepareSupportedMecahnisms(std::map<std::string, CK_MECHANISM_TYPE
 }
 
 // Return the list of supported mechanisms for a given slot
-CK_RV SoftHSM::C_GetMechanismList(CK_SLOT_ID slotID, CK_MECHANISM_TYPE_PTR pMechanismList, CK_ULONG_PTR pulCount)
+CK_RV SoftHSMCore::C_GetMechanismList(CK_SLOT_ID slotID, CK_MECHANISM_TYPE_PTR pMechanismList, CK_ULONG_PTR pulCount)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 	if (pulCount == NULL_PTR) return CKR_ARGUMENTS_BAD;
@@ -837,7 +836,7 @@ CK_RV SoftHSM::C_GetMechanismList(CK_SLOT_ID slotID, CK_MECHANISM_TYPE_PTR pMech
 }
 
 // Return more information about a mechanism for a given slot
-CK_RV SoftHSM::C_GetMechanismInfo(CK_SLOT_ID slotID, CK_MECHANISM_TYPE type, CK_MECHANISM_INFO_PTR pInfo)
+CK_RV SoftHSMCore::C_GetMechanismInfo(CK_SLOT_ID slotID, CK_MECHANISM_TYPE type, CK_MECHANISM_INFO_PTR pInfo)
 {
 	unsigned long rsaMinSize, rsaMaxSize;
 	unsigned long dsaMinSize, dsaMaxSize;
@@ -1221,7 +1220,7 @@ CK_RV SoftHSM::C_GetMechanismInfo(CK_SLOT_ID slotID, CK_MECHANISM_TYPE type, CK_
 }
 
 // Initialise the token in the specified slot
-CK_RV SoftHSM::C_InitToken(CK_SLOT_ID slotID, CK_UTF8CHAR_PTR pPin, CK_ULONG ulPinLen, CK_UTF8CHAR_PTR pLabel)
+CK_RV SoftHSMCore::C_InitToken(CK_SLOT_ID slotID, CK_UTF8CHAR_PTR pPin, CK_ULONG ulPinLen, CK_UTF8CHAR_PTR pLabel)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1247,7 +1246,7 @@ CK_RV SoftHSM::C_InitToken(CK_SLOT_ID slotID, CK_UTF8CHAR_PTR pPin, CK_ULONG ulP
 }
 
 // Initialise the user PIN
-CK_RV SoftHSM::C_InitPIN(CK_SESSION_HANDLE hSession, CK_UTF8CHAR_PTR pPin, CK_ULONG ulPinLen)
+CK_RV SoftHSMCore::C_InitPIN(CK_SESSION_HANDLE hSession, CK_UTF8CHAR_PTR pPin, CK_ULONG ulPinLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1272,7 +1271,7 @@ CK_RV SoftHSM::C_InitPIN(CK_SESSION_HANDLE hSession, CK_UTF8CHAR_PTR pPin, CK_UL
 }
 
 // Change the PIN
-CK_RV SoftHSM::C_SetPIN(CK_SESSION_HANDLE hSession, CK_UTF8CHAR_PTR pOldPin, CK_ULONG ulOldLen, CK_UTF8CHAR_PTR pNewPin, CK_ULONG ulNewLen)
+CK_RV SoftHSMCore::C_SetPIN(CK_SESSION_HANDLE hSession, CK_UTF8CHAR_PTR pOldPin, CK_ULONG ulOldLen, CK_UTF8CHAR_PTR pNewPin, CK_ULONG ulNewLen)
 {
 	CK_RV rv = CKR_OK;
 
@@ -1311,7 +1310,7 @@ CK_RV SoftHSM::C_SetPIN(CK_SESSION_HANDLE hSession, CK_UTF8CHAR_PTR pOldPin, CK_
 }
 
 // Open a new session to the specified slot
-CK_RV SoftHSM::C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApplication, CK_NOTIFY notify, CK_SESSION_HANDLE_PTR phSession)
+CK_RV SoftHSMCore::C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApplication, CK_NOTIFY notify, CK_SESSION_HANDLE_PTR phSession)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1330,7 +1329,7 @@ CK_RV SoftHSM::C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags, CK_VOID_PTR pApp
 }
 
 // Close the given session
-CK_RV SoftHSM::C_CloseSession(CK_SESSION_HANDLE hSession)
+CK_RV SoftHSMCore::C_CloseSession(CK_SESSION_HANDLE hSession)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1350,7 +1349,7 @@ CK_RV SoftHSM::C_CloseSession(CK_SESSION_HANDLE hSession)
 }
 
 // Close all open sessions
-CK_RV SoftHSM::C_CloseAllSessions(CK_SLOT_ID slotID)
+CK_RV SoftHSMCore::C_CloseAllSessions(CK_SLOT_ID slotID)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1376,7 +1375,7 @@ CK_RV SoftHSM::C_CloseAllSessions(CK_SLOT_ID slotID)
 }
 
 // Retrieve information about the specified session
-CK_RV SoftHSM::C_GetSessionInfo(CK_SESSION_HANDLE hSession, CK_SESSION_INFO_PTR pInfo)
+CK_RV SoftHSMCore::C_GetSessionInfo(CK_SESSION_HANDLE hSession, CK_SESSION_INFO_PTR pInfo)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1388,7 +1387,7 @@ CK_RV SoftHSM::C_GetSessionInfo(CK_SESSION_HANDLE hSession, CK_SESSION_INFO_PTR 
 }
 
 // Determine the state of a running operation in a session
-CK_RV SoftHSM::C_GetOperationState(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pOperationState*/, CK_ULONG_PTR /*pulOperationStateLen*/)
+CK_RV SoftHSMCore::C_GetOperationState(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pOperationState*/, CK_ULONG_PTR /*pulOperationStateLen*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1400,7 +1399,7 @@ CK_RV SoftHSM::C_GetOperationState(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pOp
 }
 
 // Set the operation sate in a session
-CK_RV SoftHSM::C_SetOperationState(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pOperationState*/, CK_ULONG /*ulOperationStateLen*/, CK_OBJECT_HANDLE /*hEncryptionKey*/, CK_OBJECT_HANDLE /*hAuthenticationKey*/)
+CK_RV SoftHSMCore::C_SetOperationState(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pOperationState*/, CK_ULONG /*ulOperationStateLen*/, CK_OBJECT_HANDLE /*hEncryptionKey*/, CK_OBJECT_HANDLE /*hAuthenticationKey*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1412,7 +1411,7 @@ CK_RV SoftHSM::C_SetOperationState(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pOp
 }
 
 // Login on the token in the specified session
-CK_RV SoftHSM::C_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType, CK_UTF8CHAR_PTR pPin, CK_ULONG ulPinLen)
+CK_RV SoftHSMCore::C_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType, CK_UTF8CHAR_PTR pPin, CK_ULONG ulPinLen)
 {
 	CK_RV rv = CKR_OK;
 
@@ -1459,7 +1458,7 @@ CK_RV SoftHSM::C_Login(CK_SESSION_HANDLE hSession, CK_USER_TYPE userType, CK_UTF
 }
 
 // Log out of the token in the specified session
-CK_RV SoftHSM::C_Logout(CK_SESSION_HANDLE hSession)
+CK_RV SoftHSMCore::C_Logout(CK_SESSION_HANDLE hSession)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1488,13 +1487,13 @@ CK_RV SoftHSM::C_Logout(CK_SESSION_HANDLE hSession)
 }
 
 // Create a new object on the token in the specified session using the given attribute template
-CK_RV SoftHSM::C_CreateObject(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phObject)
+CK_RV SoftHSMCore::C_CreateObject(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phObject)
 {
 	return this->CreateObject(hSession,pTemplate,ulCount,phObject,OBJECT_OP_CREATE);
 }
 
 // Create a copy of the object with the specified handle
-CK_RV SoftHSM::C_CopyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phNewObject)
+CK_RV SoftHSMCore::C_CopyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phNewObject)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1671,7 +1670,7 @@ CK_RV SoftHSM::C_CopyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject
 }
 
 // Destroy the specified object
-CK_RV SoftHSM::C_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
+CK_RV SoftHSMCore::C_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1717,7 +1716,7 @@ CK_RV SoftHSM::C_DestroyObject(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObj
 }
 
 // Determine the size of the specified object
-CK_RV SoftHSM::C_GetObjectSize(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ULONG_PTR pulSize)
+CK_RV SoftHSMCore::C_GetObjectSize(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ULONG_PTR pulSize)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1741,7 +1740,7 @@ CK_RV SoftHSM::C_GetObjectSize(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObj
 }
 
 // Retrieve the specified attributes for the given object
-CK_RV SoftHSM::C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
+CK_RV SoftHSMCore::C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1788,7 +1787,7 @@ CK_RV SoftHSM::C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE 
 }
 
 // Change or set the value of the specified attributes on the specified object
-CK_RV SoftHSM::C_SetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
+CK_RV SoftHSMCore::C_SetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -1839,7 +1838,7 @@ CK_RV SoftHSM::C_SetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE 
 }
 
 // Initialise object search in the specified session using the specified attribute template as search parameters
-CK_RV SoftHSM::C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
+CK_RV SoftHSMCore::C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 	if (pTemplate == NULL_PTR && ulCount != 0) return CKR_ARGUMENTS_BAD;
@@ -1989,7 +1988,7 @@ CK_RV SoftHSM::C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pT
 }
 
 // Continue the search for objects in the specified session
-CK_RV SoftHSM::C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, CK_ULONG ulMaxObjectCount, CK_ULONG_PTR pulObjectCount)
+CK_RV SoftHSMCore::C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR phObject, CK_ULONG ulMaxObjectCount, CK_ULONG_PTR pulObjectCount)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 	if (phObject == NULL_PTR) return CKR_ARGUMENTS_BAD;
@@ -2016,7 +2015,7 @@ CK_RV SoftHSM::C_FindObjects(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE_PTR ph
 }
 
 // Finish searching for objects
-CK_RV SoftHSM::C_FindObjectsFinal(CK_SESSION_HANDLE hSession)
+CK_RV SoftHSMCore::C_FindObjectsFinal(CK_SESSION_HANDLE hSession)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -2055,7 +2054,7 @@ static bool isSymMechanism(CK_MECHANISM_PTR pMechanism)
 }
 
 // SymAlgorithm version of C_EncryptInit
-CK_RV SoftHSM::SymEncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::SymEncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -2304,7 +2303,7 @@ CK_RV SoftHSM::SymEncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMech
 }
 
 // AsymAlgorithm version of C_EncryptInit
-CK_RV SoftHSM::AsymEncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::AsymEncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -2412,7 +2411,7 @@ CK_RV SoftHSM::AsymEncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMec
 }
 
 // Initialise encryption using the specified object and mechanism
-CK_RV SoftHSM::C_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::C_EncryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (isSymMechanism(pMechanism))
 		return SymEncryptInit(hSession, pMechanism, hKey);
@@ -2559,7 +2558,7 @@ static CK_RV AsymEncrypt(Session* session, CK_BYTE_PTR pData, CK_ULONG ulDataLen
 }
 
 // Perform a single operation encryption operation in the specified session
-CK_RV SoftHSM::C_Encrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
+CK_RV SoftHSMCore::C_Encrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -2657,7 +2656,7 @@ static CK_RV SymEncryptUpdate(Session* session, CK_BYTE_PTR pData, CK_ULONG ulDa
 }
 
 // Feed data to the running encryption operation in a session
-CK_RV SoftHSM::C_EncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
+CK_RV SoftHSMCore::C_EncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -2755,7 +2754,7 @@ static CK_RV SymEncryptFinal(Session* session, CK_BYTE_PTR pEncryptedData, CK_UL
 }
 
 // Finalise the encryption operation
-CK_RV SoftHSM::C_EncryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
+CK_RV SoftHSMCore::C_EncryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG_PTR pulEncryptedDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -2778,7 +2777,7 @@ CK_RV SoftHSM::C_EncryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncrypted
 }
 
 // SymAlgorithm version of C_DecryptInit
-CK_RV SoftHSM::SymDecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::SymDecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3028,7 +3027,7 @@ CK_RV SoftHSM::SymDecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMech
 }
 
 // AsymAlgorithm version of C_DecryptInit
-CK_RV SoftHSM::AsymDecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::AsymDecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3159,7 +3158,7 @@ CK_RV SoftHSM::AsymDecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMec
 }
 
 // Initialise decryption using the specified object
-CK_RV SoftHSM::C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::C_DecryptInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (isSymMechanism(pMechanism))
 		return SymDecryptInit(hSession, pMechanism, hKey);
@@ -3301,7 +3300,7 @@ static CK_RV AsymDecrypt(Session* session, CK_BYTE_PTR pEncryptedData, CK_ULONG 
 }
 
 // Perform a single operation decryption in the given session
-CK_RV SoftHSM::C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pulDataLen)
+CK_RV SoftHSMCore::C_Decrypt(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pulDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3403,7 +3402,7 @@ static CK_RV SymDecryptUpdate(Session* session, CK_BYTE_PTR pEncryptedData, CK_U
 
 
 // Feed data to the running decryption operation in a session
-CK_RV SoftHSM::C_DecryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pDataLen)
+CK_RV SoftHSMCore::C_DecryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pEncryptedData, CK_ULONG ulEncryptedDataLen, CK_BYTE_PTR pData, CK_ULONG_PTR pDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3500,7 +3499,7 @@ static CK_RV SymDecryptFinal(Session* session, CK_BYTE_PTR pDecryptedData, CK_UL
 }
 
 // Finalise the decryption operation
-CK_RV SoftHSM::C_DecryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG_PTR pDataLen)
+CK_RV SoftHSMCore::C_DecryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG_PTR pDataLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3523,7 +3522,7 @@ CK_RV SoftHSM::C_DecryptFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_
 }
 
 // Initialise digesting using the specified mechanism in the specified session
-CK_RV SoftHSM::C_DigestInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism)
+CK_RV SoftHSMCore::C_DigestInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3585,7 +3584,7 @@ CK_RV SoftHSM::C_DigestInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechan
 }
 
 // Digest the specified data in a one-pass operation and return the resulting digest
-CK_RV SoftHSM::C_Digest(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pDigest, CK_ULONG_PTR pulDigestLen)
+CK_RV SoftHSMCore::C_Digest(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pDigest, CK_ULONG_PTR pulDigestLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3650,7 +3649,7 @@ CK_RV SoftHSM::C_Digest(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG 
 }
 
 // Update a running digest operation
-CK_RV SoftHSM::C_DigestUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pPart, CK_ULONG ulPartLen)
+CK_RV SoftHSMCore::C_DigestUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pPart, CK_ULONG ulPartLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3680,7 +3679,7 @@ CK_RV SoftHSM::C_DigestUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pPart, CK_
 }
 
 // Update a running digest operation by digesting a secret key with the specified handle
-CK_RV SoftHSM::C_DigestKey(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
+CK_RV SoftHSMCore::C_DigestKey(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3754,7 +3753,7 @@ CK_RV SoftHSM::C_DigestKey(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject)
 }
 
 // Finalise the digest operation in the specified session and return the digest
-CK_RV SoftHSM::C_DigestFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pDigest, CK_ULONG_PTR pulDigestLen)
+CK_RV SoftHSMCore::C_DigestFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pDigest, CK_ULONG_PTR pulDigestLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3832,7 +3831,7 @@ static bool isMacMechanism(CK_MECHANISM_PTR pMechanism)
 }
 
 // MacAlgorithm version of C_SignInit
-CK_RV SoftHSM::MacSignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::MacSignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -3984,7 +3983,7 @@ CK_RV SoftHSM::MacSignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechani
 }
 
 // AsymmetricAlgorithm version of C_SignInit
-CK_RV SoftHSM::AsymSignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::AsymSignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -4417,7 +4416,7 @@ CK_RV SoftHSM::AsymSignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechan
 }
 
 // Initialise a signing operation using the specified key and mechanism
-CK_RV SoftHSM::C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (isMacMechanism(pMechanism))
 		return MacSignInit(hSession, pMechanism, hKey);
@@ -4560,7 +4559,7 @@ static CK_RV AsymSign(Session* session, CK_BYTE_PTR pData, CK_ULONG ulDataLen, C
 }
 
 // Sign the data in a single pass operation
-CK_RV SoftHSM::C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pulSignatureLen)
+CK_RV SoftHSMCore::C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pSignature, CK_ULONG_PTR pulSignatureLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -4639,7 +4638,7 @@ static CK_RV AsymSignUpdate(Session* session, CK_BYTE_PTR pPart, CK_ULONG ulPart
 }
 
 // Update a running signing operation with additional data
-CK_RV SoftHSM::C_SignUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pPart, CK_ULONG ulPartLen)
+CK_RV SoftHSMCore::C_SignUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pPart, CK_ULONG ulPartLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -4762,7 +4761,7 @@ static CK_RV AsymSignFinal(Session* session, CK_BYTE_PTR pSignature, CK_ULONG_PT
 }
 
 // Finalise a running signing operation and return the signature
-CK_RV SoftHSM::C_SignFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSignature, CK_ULONG_PTR pulSignatureLen)
+CK_RV SoftHSMCore::C_SignFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSignature, CK_ULONG_PTR pulSignatureLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -4783,7 +4782,7 @@ CK_RV SoftHSM::C_SignFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSignature, C
 }
 
 // Initialise a signing operation that allows recovery of the signed data
-CK_RV SoftHSM::C_SignRecoverInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR /*pMechanism*/, CK_OBJECT_HANDLE /*hKey*/)
+CK_RV SoftHSMCore::C_SignRecoverInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR /*pMechanism*/, CK_OBJECT_HANDLE /*hKey*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -4798,7 +4797,7 @@ CK_RV SoftHSM::C_SignRecoverInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR /*
 }
 
 // Perform a single part signing operation that allows recovery of the signed data
-CK_RV SoftHSM::C_SignRecover(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pData*/, CK_ULONG /*ulDataLen*/, CK_BYTE_PTR /*pSignature*/, CK_ULONG_PTR /*pulSignatureLen*/)
+CK_RV SoftHSMCore::C_SignRecover(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pData*/, CK_ULONG /*ulDataLen*/, CK_BYTE_PTR /*pSignature*/, CK_ULONG_PTR /*pulSignatureLen*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -4810,7 +4809,7 @@ CK_RV SoftHSM::C_SignRecover(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pData*/, 
 }
 
 // MacAlgorithm version of C_VerifyInit
-CK_RV SoftHSM::MacVerifyInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::MacVerifyInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -4962,7 +4961,7 @@ CK_RV SoftHSM::MacVerifyInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMecha
 }
 
 // AsymmetricAlgorithm version of C_VerifyInit
-CK_RV SoftHSM::AsymVerifyInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::AsymVerifyInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5387,7 +5386,7 @@ CK_RV SoftHSM::AsymVerifyInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMech
 }
 
 // Initialise a verification operation using the specified key and mechanism
-CK_RV SoftHSM::C_VerifyInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
+CK_RV SoftHSMCore::C_VerifyInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_OBJECT_HANDLE hKey)
 {
 	if (isMacMechanism(pMechanism))
 		return MacVerifyInit(hSession, pMechanism, hKey);
@@ -5497,7 +5496,7 @@ static CK_RV AsymVerify(Session* session, CK_BYTE_PTR pData, CK_ULONG ulDataLen,
 }
 
 // Perform a single pass verification operation
-CK_RV SoftHSM::C_Verify(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen)
+CK_RV SoftHSMCore::C_Verify(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData, CK_ULONG ulDataLen, CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5571,7 +5570,7 @@ static CK_RV AsymVerifyUpdate(Session* session, CK_BYTE_PTR pPart, CK_ULONG ulPa
 }
 
 // Update a running verification operation with additional data
-CK_RV SoftHSM::C_VerifyUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pPart, CK_ULONG ulPartLen)
+CK_RV SoftHSMCore::C_VerifyUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pPart, CK_ULONG ulPartLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5663,7 +5662,7 @@ static CK_RV AsymVerifyFinal(Session* session, CK_BYTE_PTR pSignature, CK_ULONG 
 }
 
 // Finalise the verification operation and check the signature
-CK_RV SoftHSM::C_VerifyFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen)
+CK_RV SoftHSMCore::C_VerifyFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSignature, CK_ULONG ulSignatureLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5684,7 +5683,7 @@ CK_RV SoftHSM::C_VerifyFinal(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSignature,
 }
 
 // Initialise a verification operation the allows recovery of the signed data from the signature
-CK_RV SoftHSM::C_VerifyRecoverInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR /*pMechanism*/, CK_OBJECT_HANDLE /*hKey*/)
+CK_RV SoftHSMCore::C_VerifyRecoverInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR /*pMechanism*/, CK_OBJECT_HANDLE /*hKey*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5699,7 +5698,7 @@ CK_RV SoftHSM::C_VerifyRecoverInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR 
 }
 
 // Perform a single part verification operation and recover the signed data
-CK_RV SoftHSM::C_VerifyRecover(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pSignature*/, CK_ULONG /*ulSignatureLen*/, CK_BYTE_PTR /*pData*/, CK_ULONG_PTR /*pulDataLen*/)
+CK_RV SoftHSMCore::C_VerifyRecover(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pSignature*/, CK_ULONG /*ulSignatureLen*/, CK_BYTE_PTR /*pData*/, CK_ULONG_PTR /*pulDataLen*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5711,7 +5710,7 @@ CK_RV SoftHSM::C_VerifyRecover(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pSignat
 }
 
 // Update a running multi-part encryption and digesting operation
-CK_RV SoftHSM::C_DigestEncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pPart*/, CK_ULONG /*ulPartLen*/, CK_BYTE_PTR /*pEncryptedPart*/, CK_ULONG_PTR /*pulEncryptedPartLen*/)
+CK_RV SoftHSMCore::C_DigestEncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pPart*/, CK_ULONG /*ulPartLen*/, CK_BYTE_PTR /*pEncryptedPart*/, CK_ULONG_PTR /*pulEncryptedPartLen*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5723,7 +5722,7 @@ CK_RV SoftHSM::C_DigestEncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*p
 }
 
 // Update a running multi-part decryption and digesting operation
-CK_RV SoftHSM::C_DecryptDigestUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pPart*/, CK_ULONG /*ulPartLen*/, CK_BYTE_PTR /*pDecryptedPart*/, CK_ULONG_PTR /*pulDecryptedPartLen*/)
+CK_RV SoftHSMCore::C_DecryptDigestUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pPart*/, CK_ULONG /*ulPartLen*/, CK_BYTE_PTR /*pDecryptedPart*/, CK_ULONG_PTR /*pulDecryptedPartLen*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5735,7 +5734,7 @@ CK_RV SoftHSM::C_DecryptDigestUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*p
 }
 
 // Update a running multi-part signing and encryption operation
-CK_RV SoftHSM::C_SignEncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pPart*/, CK_ULONG /*ulPartLen*/, CK_BYTE_PTR /*pEncryptedPart*/, CK_ULONG_PTR /*pulEncryptedPartLen*/)
+CK_RV SoftHSMCore::C_SignEncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pPart*/, CK_ULONG /*ulPartLen*/, CK_BYTE_PTR /*pEncryptedPart*/, CK_ULONG_PTR /*pulEncryptedPartLen*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5747,7 +5746,7 @@ CK_RV SoftHSM::C_SignEncryptUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pPa
 }
 
 // Update a running multi-part decryption and verification operation
-CK_RV SoftHSM::C_DecryptVerifyUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pEncryptedPart*/, CK_ULONG /*ulEncryptedPartLen*/, CK_BYTE_PTR /*pPart*/, CK_ULONG_PTR /*pulPartLen*/)
+CK_RV SoftHSMCore::C_DecryptVerifyUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*pEncryptedPart*/, CK_ULONG /*ulEncryptedPartLen*/, CK_BYTE_PTR /*pPart*/, CK_ULONG_PTR /*pulPartLen*/)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5759,7 +5758,7 @@ CK_RV SoftHSM::C_DecryptVerifyUpdate(CK_SESSION_HANDLE hSession, CK_BYTE_PTR /*p
 }
 
 // Generate a secret key or a domain parameter set using the specified mechanism
-CK_RV SoftHSM::C_GenerateKey(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phKey)
+CK_RV SoftHSMCore::C_GenerateKey(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phKey)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -5901,7 +5900,7 @@ CK_RV SoftHSM::C_GenerateKey(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMecha
 }
 
 // Generate a key-pair using the specified mechanism
-CK_RV SoftHSM::C_GenerateKeyPair
+CK_RV SoftHSMCore::C_GenerateKeyPair
 (
 	CK_SESSION_HANDLE hSession,
 	CK_MECHANISM_PTR pMechanism,
@@ -6080,7 +6079,7 @@ CK_RV SoftHSM::C_GenerateKeyPair
 }
 
 // Internal: Wrap blob using symmetric key
-CK_RV SoftHSM::WrapKeySym
+CK_RV SoftHSMCore::WrapKeySym
 (
 	CK_MECHANISM_PTR pMechanism,
 	Token* token,
@@ -6154,7 +6153,7 @@ CK_RV SoftHSM::WrapKeySym
 }
 
 // Internal: Wrap blob using asymmetric key
-CK_RV SoftHSM::WrapKeyAsym
+CK_RV SoftHSMCore::WrapKeyAsym
 (
 	CK_MECHANISM_PTR pMechanism,
 	Token* token,
@@ -6243,7 +6242,7 @@ CK_RV SoftHSM::WrapKeyAsym
 
 
 // Wrap the specified key using the specified wrapping key and mechanism
-CK_RV SoftHSM::C_WrapKey
+CK_RV SoftHSMCore::C_WrapKey
 (
 	CK_SESSION_HANDLE hSession,
 	CK_MECHANISM_PTR pMechanism,
@@ -6481,9 +6480,9 @@ CK_RV SoftHSM::C_WrapKey
 	keyClass = wrapKey->getUnsignedLongValue(CKA_CLASS, CKO_VENDOR_DEFINED);
 	ByteString wrapped;
 	if (keyClass == CKO_SECRET_KEY)
-		rv = SoftHSM::WrapKeySym(pMechanism, token, wrapKey, keydata, wrapped);
+		rv = SoftHSMCore::WrapKeySym(pMechanism, token, wrapKey, keydata, wrapped);
 	else
-		rv = SoftHSM::WrapKeyAsym(pMechanism, token, wrapKey, keydata, wrapped);
+		rv = SoftHSMCore::WrapKeyAsym(pMechanism, token, wrapKey, keydata, wrapped);
 	if (rv != CKR_OK)
 		return rv;
 
@@ -6499,7 +6498,7 @@ CK_RV SoftHSM::C_WrapKey
 }
 
 // Internal: Unwrap blob using symmetric key
-CK_RV SoftHSM::UnwrapKeySym
+CK_RV SoftHSMCore::UnwrapKeySym
 (
 	CK_MECHANISM_PTR pMechanism,
 	ByteString& wrapped,
@@ -6553,7 +6552,7 @@ CK_RV SoftHSM::UnwrapKeySym
 }
 
 // Internal: Unwrap blob using asymmetric key
-CK_RV SoftHSM::UnwrapKeyAsym
+CK_RV SoftHSMCore::UnwrapKeyAsym
 (
 	CK_MECHANISM_PTR pMechanism,
 	ByteString& wrapped,
@@ -6614,7 +6613,7 @@ CK_RV SoftHSM::UnwrapKeyAsym
 }
 
 // Unwrap the specified key using the specified unwrapping key
-CK_RV SoftHSM::C_UnwrapKey
+CK_RV SoftHSMCore::C_UnwrapKey
 (
 	CK_SESSION_HANDLE hSession,
 	CK_MECHANISM_PTR pMechanism,
@@ -6916,7 +6915,7 @@ CK_RV SoftHSM::C_UnwrapKey
 }
 
 // Derive a key from the specified base key
-CK_RV SoftHSM::C_DeriveKey
+CK_RV SoftHSMCore::C_DeriveKey
 (
 	CK_SESSION_HANDLE hSession,
 	CK_MECHANISM_PTR pMechanism,
@@ -7093,7 +7092,7 @@ CK_RV SoftHSM::C_DeriveKey
 }
 
 // Seed the random number generator with new data
-CK_RV SoftHSM::C_SeedRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSeed, CK_ULONG ulSeedLen)
+CK_RV SoftHSMCore::C_SeedRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSeed, CK_ULONG ulSeedLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -7115,7 +7114,7 @@ CK_RV SoftHSM::C_SeedRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSeed, CK_UL
 }
 
 // Generate the specified amount of random data
-CK_RV SoftHSM::C_GenerateRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pRandomData, CK_ULONG ulRandomLen)
+CK_RV SoftHSMCore::C_GenerateRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pRandomData, CK_ULONG ulRandomLen)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -7143,7 +7142,7 @@ CK_RV SoftHSM::C_GenerateRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pRandomD
 }
 
 // Legacy function
-CK_RV SoftHSM::C_GetFunctionStatus(CK_SESSION_HANDLE hSession)
+CK_RV SoftHSMCore::C_GetFunctionStatus(CK_SESSION_HANDLE hSession)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -7155,7 +7154,7 @@ CK_RV SoftHSM::C_GetFunctionStatus(CK_SESSION_HANDLE hSession)
 }
 
 // Legacy function
-CK_RV SoftHSM::C_CancelFunction(CK_SESSION_HANDLE hSession)
+CK_RV SoftHSMCore::C_CancelFunction(CK_SESSION_HANDLE hSession)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -7167,7 +7166,7 @@ CK_RV SoftHSM::C_CancelFunction(CK_SESSION_HANDLE hSession)
 }
 
 // Wait or poll for a slot event on the specified slot
-CK_RV SoftHSM::C_WaitForSlotEvent(CK_FLAGS flags, CK_SLOT_ID_PTR /*pSlot*/, CK_VOID_PTR /*pReserved*/)
+CK_RV SoftHSMCore::C_WaitForSlotEvent(CK_FLAGS flags, CK_SLOT_ID_PTR /*pSlot*/, CK_VOID_PTR /*pReserved*/)
 {
 	if (!(flags & CKF_DONT_BLOCK)) return CKR_FUNCTION_NOT_SUPPORTED;
 
@@ -7180,7 +7179,7 @@ CK_RV SoftHSM::C_WaitForSlotEvent(CK_FLAGS flags, CK_SLOT_ID_PTR /*pSlot*/, CK_V
 	return CKR_NO_EVENT;
 }
 
-CK_RV SoftHSM::generateGeneric
+CK_RV SoftHSMCore::generateGeneric
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pTemplate,
 	CK_ULONG ulCount,
@@ -7352,7 +7351,7 @@ CK_RV SoftHSM::generateGeneric
 }
 
 // Generate an AES secret key
-CK_RV SoftHSM::generateAES
+CK_RV SoftHSMCore::generateAES
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pTemplate,
 	CK_ULONG ulCount,
@@ -7542,7 +7541,7 @@ CK_RV SoftHSM::generateAES
 }
 
 // Generate a DES secret key
-CK_RV SoftHSM::generateDES
+CK_RV SoftHSMCore::generateDES
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pTemplate,
 	CK_ULONG ulCount,
@@ -7709,7 +7708,7 @@ CK_RV SoftHSM::generateDES
 }
 
 // Generate a DES2 secret key
-CK_RV SoftHSM::generateDES2
+CK_RV SoftHSMCore::generateDES2
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pTemplate,
 	CK_ULONG ulCount,
@@ -7876,7 +7875,7 @@ CK_RV SoftHSM::generateDES2
 }
 
 // Generate a DES3 secret key
-CK_RV SoftHSM::generateDES3
+CK_RV SoftHSMCore::generateDES3
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pTemplate,
 	CK_ULONG ulCount,
@@ -8043,7 +8042,7 @@ CK_RV SoftHSM::generateDES3
 }
 
 // Generate an RSA key pair
-CK_RV SoftHSM::generateRSA
+CK_RV SoftHSMCore::generateRSA
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pPublicKeyTemplate,
 	CK_ULONG ulPublicKeyAttributeCount,
@@ -8330,7 +8329,7 @@ CK_RV SoftHSM::generateRSA
 }
 
 // Generate a DSA key pair
-CK_RV SoftHSM::generateDSA
+CK_RV SoftHSMCore::generateDSA
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pPublicKeyTemplate,
 	CK_ULONG ulPublicKeyAttributeCount,
@@ -8594,7 +8593,7 @@ CK_RV SoftHSM::generateDSA
 }
 
 // Generate a DSA domain parameter set
-CK_RV SoftHSM::generateDSAParameters
+CK_RV SoftHSMCore::generateDSAParameters
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pTemplate,
 	CK_ULONG ulCount,
@@ -8768,7 +8767,7 @@ CK_RV SoftHSM::generateDSAParameters
 }
 
 // Generate an EC key pair
-CK_RV SoftHSM::generateEC
+CK_RV SoftHSMCore::generateEC
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pPublicKeyTemplate,
 	CK_ULONG ulPublicKeyAttributeCount,
@@ -9014,7 +9013,7 @@ CK_RV SoftHSM::generateEC
 }
 
 // Generate an EDDSA key pair
-CK_RV SoftHSM::generateED
+CK_RV SoftHSMCore::generateED
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pPublicKeyTemplate,
 	CK_ULONG ulPublicKeyAttributeCount,
@@ -9260,7 +9259,7 @@ CK_RV SoftHSM::generateED
 }
 
 // Generate a DH key pair
-CK_RV SoftHSM::generateDH
+CK_RV SoftHSMCore::generateDH
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pPublicKeyTemplate,
 	CK_ULONG ulPublicKeyAttributeCount,
@@ -9535,7 +9534,7 @@ CK_RV SoftHSM::generateDH
 }
 
 // Generate a DH domain parameter set
-CK_RV SoftHSM::generateDHParameters
+CK_RV SoftHSMCore::generateDHParameters
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pTemplate,
 	CK_ULONG ulCount,
@@ -9689,7 +9688,7 @@ CK_RV SoftHSM::generateDHParameters
 }
 
 // Generate a GOST key pair
-CK_RV SoftHSM::generateGOST
+CK_RV SoftHSMCore::generateGOST
 (CK_SESSION_HANDLE hSession,
 	CK_ATTRIBUTE_PTR pPublicKeyTemplate,
 	CK_ULONG ulPublicKeyAttributeCount,
@@ -9951,7 +9950,7 @@ CK_RV SoftHSM::generateGOST
 }
 
 // Derive a DH secret
-CK_RV SoftHSM::deriveDH
+CK_RV SoftHSMCore::deriveDH
 (CK_SESSION_HANDLE hSession,
 	CK_MECHANISM_PTR pMechanism,
 	CK_OBJECT_HANDLE hBaseKey,
@@ -10266,7 +10265,7 @@ CK_RV SoftHSM::deriveDH
 
 // Derive an ECDH secret
 #ifdef WITH_ECC
-CK_RV SoftHSM::deriveECDH
+CK_RV SoftHSMCore::deriveECDH
 (CK_SESSION_HANDLE hSession,
 	CK_MECHANISM_PTR pMechanism,
 	CK_OBJECT_HANDLE hBaseKey,
@@ -10620,7 +10619,7 @@ CK_RV SoftHSM::deriveECDH
 
 // Derive an ECDH secret using Montgomery curves
 #ifdef WITH_EDDSA
-CK_RV SoftHSM::deriveEDDSA
+CK_RV SoftHSMCore::deriveEDDSA
 (CK_SESSION_HANDLE hSession,
 	CK_MECHANISM_PTR pMechanism,
 	CK_OBJECT_HANDLE hBaseKey,
@@ -10973,7 +10972,7 @@ CK_RV SoftHSM::deriveEDDSA
 #endif
 
 // Derive an symmetric secret
-CK_RV SoftHSM::deriveSymmetric
+CK_RV SoftHSMCore::deriveSymmetric
 (CK_SESSION_HANDLE hSession,
 	CK_MECHANISM_PTR pMechanism,
 	CK_OBJECT_HANDLE hBaseKey,
@@ -11430,7 +11429,7 @@ CK_RV SoftHSM::deriveSymmetric
 	return rv;
 }
 
-CK_RV SoftHSM::CreateObject(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phObject, int op)
+CK_RV SoftHSMCore::CreateObject(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pTemplate, CK_ULONG ulCount, CK_OBJECT_HANDLE_PTR phObject, int op)
 {
 	if (!isInitialised) return CKR_CRYPTOKI_NOT_INITIALIZED;
 
@@ -11559,7 +11558,7 @@ CK_RV SoftHSM::CreateObject(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR pTempla
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getRSAPrivateKey(RSAPrivateKey* privateKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getRSAPrivateKey(RSAPrivateKey* privateKey, Token* token, OSObject* key)
 {
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11615,7 +11614,7 @@ CK_RV SoftHSM::getRSAPrivateKey(RSAPrivateKey* privateKey, Token* token, OSObjec
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getRSAPublicKey(RSAPublicKey* publicKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getRSAPublicKey(RSAPublicKey* publicKey, Token* token, OSObject* key)
 {
 	if (publicKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11647,7 +11646,7 @@ CK_RV SoftHSM::getRSAPublicKey(RSAPublicKey* publicKey, Token* token, OSObject* 
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getDSAPrivateKey(DSAPrivateKey* privateKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getDSAPrivateKey(DSAPrivateKey* privateKey, Token* token, OSObject* key)
 {
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11687,7 +11686,7 @@ CK_RV SoftHSM::getDSAPrivateKey(DSAPrivateKey* privateKey, Token* token, OSObjec
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getDSAPublicKey(DSAPublicKey* publicKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getDSAPublicKey(DSAPublicKey* publicKey, Token* token, OSObject* key)
 {
 	if (publicKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11727,7 +11726,7 @@ CK_RV SoftHSM::getDSAPublicKey(DSAPublicKey* publicKey, Token* token, OSObject* 
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getECPrivateKey(ECPrivateKey* privateKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getECPrivateKey(ECPrivateKey* privateKey, Token* token, OSObject* key)
 {
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11759,7 +11758,7 @@ CK_RV SoftHSM::getECPrivateKey(ECPrivateKey* privateKey, Token* token, OSObject*
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getECPublicKey(ECPublicKey* publicKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getECPublicKey(ECPublicKey* publicKey, Token* token, OSObject* key)
 {
 	if (publicKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11791,7 +11790,7 @@ CK_RV SoftHSM::getECPublicKey(ECPublicKey* publicKey, Token* token, OSObject* ke
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getEDPrivateKey(EDPrivateKey* privateKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getEDPrivateKey(EDPrivateKey* privateKey, Token* token, OSObject* key)
 {
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11823,7 +11822,7 @@ CK_RV SoftHSM::getEDPrivateKey(EDPrivateKey* privateKey, Token* token, OSObject*
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getEDPublicKey(EDPublicKey* publicKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getEDPublicKey(EDPublicKey* publicKey, Token* token, OSObject* key)
 {
 	if (publicKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11855,7 +11854,7 @@ CK_RV SoftHSM::getEDPublicKey(EDPublicKey* publicKey, Token* token, OSObject* ke
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getDHPrivateKey(DHPrivateKey* privateKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getDHPrivateKey(DHPrivateKey* privateKey, Token* token, OSObject* key)
 {
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -11891,7 +11890,7 @@ CK_RV SoftHSM::getDHPrivateKey(DHPrivateKey* privateKey, Token* token, OSObject*
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getDHPublicKey(DHPublicKey* publicKey, DHPrivateKey* privateKey, ByteString& pubParams)
+CK_RV SoftHSMCore::getDHPublicKey(DHPublicKey* publicKey, DHPrivateKey* privateKey, ByteString& pubParams)
 {
 	if (publicKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
@@ -11906,7 +11905,7 @@ CK_RV SoftHSM::getDHPublicKey(DHPublicKey* publicKey, DHPrivateKey* privateKey, 
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getECDHPublicKey(ECPublicKey* publicKey, ECPrivateKey* privateKey, ByteString& pubData)
+CK_RV SoftHSMCore::getECDHPublicKey(ECPublicKey* publicKey, ECPrivateKey* privateKey, ByteString& pubData)
 {
 	if (publicKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
@@ -11921,7 +11920,7 @@ CK_RV SoftHSM::getECDHPublicKey(ECPublicKey* publicKey, ECPrivateKey* privateKey
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getEDDHPublicKey(EDPublicKey* publicKey, EDPrivateKey* privateKey, ByteString& pubData)
+CK_RV SoftHSMCore::getEDDHPublicKey(EDPublicKey* publicKey, EDPrivateKey* privateKey, ByteString& pubData)
 {
 	if (publicKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
@@ -11938,7 +11937,7 @@ CK_RV SoftHSM::getEDDHPublicKey(EDPublicKey* publicKey, EDPrivateKey* privateKey
 
 // ECDH pubData can be in RAW or DER format.
 // Need to convert RAW as SoftHSM uses DER.
-ByteString SoftHSM::getECDHPubData(ByteString& pubData)
+ByteString SoftHSMCore::getECDHPubData(ByteString& pubData)
 {
 	size_t len = pubData.size();
 	size_t controlOctets = 2;
@@ -11987,7 +11986,7 @@ ByteString SoftHSM::getECDHPubData(ByteString& pubData)
 	return DERUTIL::raw2Octet(pubData);
 }
 
-CK_RV SoftHSM::getGOSTPrivateKey(GOSTPrivateKey* privateKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getGOSTPrivateKey(GOSTPrivateKey* privateKey, Token* token, OSObject* key)
 {
 	if (privateKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -12019,7 +12018,7 @@ CK_RV SoftHSM::getGOSTPrivateKey(GOSTPrivateKey* privateKey, Token* token, OSObj
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getGOSTPublicKey(GOSTPublicKey* publicKey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getGOSTPublicKey(GOSTPublicKey* publicKey, Token* token, OSObject* key)
 {
 	if (publicKey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -12051,7 +12050,7 @@ CK_RV SoftHSM::getGOSTPublicKey(GOSTPublicKey* publicKey, Token* token, OSObject
 	return CKR_OK;
 }
 
-CK_RV SoftHSM::getSymmetricKey(SymmetricKey* skey, Token* token, OSObject* key)
+CK_RV SoftHSMCore::getSymmetricKey(SymmetricKey* skey, Token* token, OSObject* key)
 {
 	if (skey == NULL) return CKR_ARGUMENTS_BAD;
 	if (token == NULL) return CKR_ARGUMENTS_BAD;
@@ -12076,7 +12075,7 @@ CK_RV SoftHSM::getSymmetricKey(SymmetricKey* skey, Token* token, OSObject* key)
 	return CKR_OK;
 }
 
-bool SoftHSM::setRSAPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
+bool SoftHSMCore::setRSAPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
 {
 	AsymmetricAlgorithm* rsa = CryptoFactory::i()->getAsymmetricAlgorithm(AsymAlgo::RSA);
 	if (rsa == NULL)
@@ -12140,7 +12139,7 @@ bool SoftHSM::setRSAPrivateKey(OSObject* key, const ByteString &ber, Token* toke
 	return bOK;
 }
 
-bool SoftHSM::setDSAPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
+bool SoftHSMCore::setDSAPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
 {
 	AsymmetricAlgorithm* dsa = CryptoFactory::i()->getAsymmetricAlgorithm(AsymAlgo::DSA);
 	if (dsa == NULL)
@@ -12188,7 +12187,7 @@ bool SoftHSM::setDSAPrivateKey(OSObject* key, const ByteString &ber, Token* toke
 	return bOK;
 }
 
-bool SoftHSM::setDHPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
+bool SoftHSMCore::setDHPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
 {
 	AsymmetricAlgorithm* dh = CryptoFactory::i()->getAsymmetricAlgorithm(AsymAlgo::DH);
 	if (dh == NULL)
@@ -12232,7 +12231,7 @@ bool SoftHSM::setDHPrivateKey(OSObject* key, const ByteString &ber, Token* token
 	return bOK;
 }
 
-bool SoftHSM::setECPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
+bool SoftHSMCore::setECPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
 {
 	AsymmetricAlgorithm* ecc = CryptoFactory::i()->getAsymmetricAlgorithm(AsymAlgo::ECDSA);
 	if (ecc == NULL)
@@ -12272,7 +12271,7 @@ bool SoftHSM::setECPrivateKey(OSObject* key, const ByteString &ber, Token* token
 	return bOK;
 }
 
-bool SoftHSM::setGOSTPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
+bool SoftHSMCore::setGOSTPrivateKey(OSObject* key, const ByteString &ber, Token* token, bool isPrivate) const
 {
 	AsymmetricAlgorithm* gost = CryptoFactory::i()->getAsymmetricAlgorithm(AsymAlgo::GOST);
 	if (gost == NULL)
@@ -12312,7 +12311,7 @@ bool SoftHSM::setGOSTPrivateKey(OSObject* key, const ByteString &ber, Token* tok
 	return bOK;
 }
 
-CK_RV SoftHSM::MechParamCheckRSAPKCSOAEP(CK_MECHANISM_PTR pMechanism)
+CK_RV SoftHSMCore::MechParamCheckRSAPKCSOAEP(CK_MECHANISM_PTR pMechanism)
 {
 	// This is a programming error
 	if (pMechanism->mechanism != CKM_RSA_PKCS_OAEP) {
@@ -12356,7 +12355,7 @@ CK_RV SoftHSM::MechParamCheckRSAPKCSOAEP(CK_MECHANISM_PTR pMechanism)
 	return CKR_OK;
 }
 
-bool SoftHSM::isMechanismPermitted(OSObject* key, CK_MECHANISM_PTR pMechanism)
+bool SoftHSMCore::isMechanismPermitted(OSObject* key, CK_MECHANISM_PTR pMechanism)
 {
 	std::list<CK_MECHANISM_TYPE> mechs = supportedMechanisms;
 	/* First check if the algorithm is enabled in the global configuration */

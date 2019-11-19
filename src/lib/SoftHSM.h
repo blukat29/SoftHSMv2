@@ -30,6 +30,9 @@
  This is the main class of the SoftHSM; it has the PKCS #11 interface and
  dispatches all calls to the relevant components of the SoftHSM. The SoftHSM
  class is a singleton implementation.
+
+ The SoftHSMCore class is a non-singleton implementation. The SoftHSM class
+ simply inherits SoftHSMCore and adds the singleton harness.
  *****************************************************************************/
 
 #include "config.h"
@@ -55,17 +58,11 @@
 
 #include <memory>
 
-class SoftHSM
+class SoftHSMCore
 {
 public:
-	// Return the one-and-only instance
-	static SoftHSM* i();
-
-	// This will destroy the one-and-only instance.
-	static void reset();
-
 	// Destructor
-	virtual ~SoftHSM();
+	virtual ~SoftHSMCore();
 
 	// PKCS #11 functions
 	CK_RV C_Initialize(CK_VOID_PTR pInitArgs);
@@ -172,16 +169,11 @@ public:
 	CK_RV C_CancelFunction(CK_SESSION_HANDLE hSession);
 	CK_RV C_WaitForSlotEvent(CK_FLAGS flags, CK_SLOT_ID_PTR pSlot, CK_VOID_PTR pReserved);
 
-private:
+protected:
 	// Constructor
-	SoftHSM();
+	SoftHSMCore();
 
-	// The one-and-only instance
-#ifdef HAVE_CXX11
-	static std::unique_ptr<SoftHSM> instance;
-#else
-	static std::auto_ptr<SoftHSM> instance;
-#endif
+private:
 
 	// Is the SoftHSM PKCS #11 library initialised?
 	bool isInitialised;
@@ -480,3 +472,23 @@ private:
 	static void prepareSupportedMecahnisms(std::map<std::string, CK_MECHANISM_TYPE> &t);
 };
 
+class SoftHSM : public SoftHSMCore
+{
+public:
+	// Return the one-and-only instance
+	static SoftHSM* i();
+
+	// This will destroy the one-and-only instance.
+	static void reset();
+
+private:
+	SoftHSM() : SoftHSMCore() { }
+
+	// The one-and-only instance
+#ifdef HAVE_CXX11
+	static std::unique_ptr<SoftHSM> instance;
+#else
+	static std::auto_ptr<SoftHSM> instance;
+#endif
+
+};
