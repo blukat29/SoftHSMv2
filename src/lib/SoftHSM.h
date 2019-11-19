@@ -35,6 +35,9 @@
  simply inherits SoftHSMCore and adds the singleton harness.
  *****************************************************************************/
 
+#ifndef _SOFTHSM_V2_SOFTHSM_H
+#define _SOFTHSM_V2_SOFTHSM_H
+
 #include "config.h"
 #include "log.h"
 #include "cryptoki.h"
@@ -492,3 +495,5 @@ private:
 #endif
 
 };
+
+#endif // !_SOFTHSM_V2_SOFTHSM_H
