@@ -434,6 +434,7 @@ typedef CK_ULONG          CK_CERTIFICATE_TYPE;
 #define CKC_X_509_ATTR_CERT     0x00000001UL
 #define CKC_WTLS                0x00000002UL
 #define CKC_VENDOR_DEFINED      0x80000000UL
+#define CKC_OPENPGP             (CKC_VENDOR_DEFINED|0x504750UL)
 
 
 /* CK_ATTRIBUTE_TYPE is a value that identifies an attribute
