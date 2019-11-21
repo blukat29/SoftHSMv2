@@ -887,6 +887,8 @@ typedef CK_ULONG          CK_MECHANISM_TYPE;
 #define CKM_WTLS_SERVER_KEY_AND_MAC_DERIVE  0x000003D4UL
 #define CKM_WTLS_CLIENT_KEY_AND_MAC_DERIVE  0x000003D5UL
 
+#define CKM_TLS10_MAC_SERVER                0x000003D6UL /* Deprecated */
+#define CKM_TLS10_MAC_CLIENT                0x000003D7UL /* Deprecated */
 #define CKM_TLS12_MAC                       0x000003D8UL
 #define CKM_TLS12_KDF                       0x000003D9UL
 #define CKM_TLS12_MASTER_KEY_DERIVE         0x000003E0UL
